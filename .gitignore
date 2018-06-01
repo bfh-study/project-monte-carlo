@@ -2,3 +2,6 @@ data/*
 *.RData
 API_KEY.R
 
+# PROJECT FILES
+.Rhistory
+.Rproj.user
