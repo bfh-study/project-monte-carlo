@@ -20,3 +20,21 @@ loadData <- function(symbol, path = './data') {
     
     return(loadData)
 }
+
+plotSimulations <- function(data, simulations, days, sim_days) {
+  # Create Line Chart
+  d <- data.frame(X=c(seq(days-sim_days,days-1)))
+  
+  # get the range for the x and y axis
+  xrange <- range(seq(0,days))
+  yrange <- range(data)
+  plot(xrange, yrange, type="n", xlab="Tage",ylab="Preis" ) 
+  lines(data, type = "l", col = 1) # Color 1 = black
+  
+  color = 2
+  for (prices in simulations) {
+    lines(y=prices, x=d$X, type = "l", col = color)
+    color = color + 1
+  }
+}
+

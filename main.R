@@ -1,13 +1,19 @@
-#############################################################
-##                       MAIN-FILE                         ##
-#############################################################
 
-
-# load util functions
+# #############################################################
+# ##                       MAIN-FILE                         ##
+# #############################################################
+#
+#
+# # load util functions
 source("util.R")
+source("calc.R")
 
-# loadData('KO')
-allData <- loadData('SCMWY')
+#allData <- loadData('GOOGL')
+allData <- loadData('KO')
+#allData <- loadData('AAPL')
+
+# reverse order
+allData <- allData[nrow(allData):1,]
 
 # example of how you can create a line chart
 # data2017 <- subset(allData, as.Date(timestamp) > as.Date('2016-12-31') & as.Date(timestamp) < as.Date('2018-01-01'))
@@ -18,47 +24,34 @@ allData <- loadData('SCMWY')
 # plot(data2017$timestamp, data2017$close, type='l', ylim = yrange)
 # lines(trucks, type="o", pch=22, lty=2, col="red")
 
-data2017 <- subset(allData, as.Date(timestamp) > as.Date('2016-12-31') & as.Date(timestamp) < as.Date('2018-01-01'))
-days <- length(data2017$rendite)
+dataIntervall <- subset(allData, as.Date(timestamp) > as.Date('2017-09-30') & as.Date(timestamp) < as.Date('2018-01-01'))
 
-allData$open <- as.numeric(allData$open)
-allData$close <- as.numeric(allData$close)
-allData$rendite <- allData$close - allData$open
-mean <- mean(allData$rendite)
-sd <- sd(allData$rendite)
+# Data assignment
+data <-dataIntervall
+#data <-allData
 
-#' Stock price calculation
-#' 
-#' Calculates stock price after n periods using standard stock price model
-#' @param stock_price original stock price
-#' @param n number of periods
-#' @param stock_mu expected percentual stock drift over n periods
-#' @param stock_sigma expecter percentual stock volatility
-#' @return stock price after n periods
-f_stock_return <- function(stock_price, n, stock_mu, stock_sigma){
-  delta_t <- 1/n # one period
-  for (i in seq(n)){
-    epsilon <- runif(n=1, min=0, max=1) # random generated number
-    # calculate stock price (using quantile function of normal distribution)
-    stock_price <- stock_price * (1 + qnorm(epsilon, 
-                                            stock_mu * delta_t, 
-                                            stock_sigma* sqrt(delta_t)))
-  }
-  return(stock_price)
+# Number of simulation days
+sim_days  <- 25
+sim_count <- 3
+
+# Data until simulation date. 
+# It is used for calculating: return, sample mean and sample standard deviation 
+calcData  <- dataIntervall[sim_days:nrow(dataIntervall)-sim_days,,drop=F]
+rendite   <- calcRentide(calcData$close)
+mean      <- mean(rendite)
+sd        <- sd(rendite)
+
+# number of days in the defined interval, also includes the sumulation days
+days      <- length(data$X)
+
+# The price on the simulation start day
+price     <- data$close[[days-sim_days]]
+
+# Execute Simulations
+sim_list <- list()
+for (i in seq(0:sim_count)){
+  sim_list[[i]] <-simulation(sim_days, price, mean, sd)
 }
 
-gugus <- f_stock_return(data2017$close[[days]], days, mean, sd)
-
-
-# f_stock_return <- function(stock_price, n, mean, sd){
-#   mu <- n * mean
-#   sigma <- sqrt(n) * sd
-#   delta_t <- 365 / n
-#   for (i in seq(n)){
-#     epsilon <- runif(n=1, min=0, max=1) # random generated number
-#     # calculate stock price (using quantile function of normal distribution)
-#     stock_price <- stock_price * (1 + qnorm(epsilon, stock_mu * delta_t, stock_sigma* sqrt(delta_t)))
-#   }
-#   return(stock_price)
-# }
-
+# Plot simulations
+plotSimulations(calcPrices, sim_list, days, sim_days)
