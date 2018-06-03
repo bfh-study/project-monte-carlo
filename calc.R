@@ -8,40 +8,31 @@ calcReturns <- function(data) {
   return(return)
 }
 
-# calcPrice <- function(price, mu, sigma){
-#   epsilon <- runif(n=1, min=-1, max=1)
-#   price <- price * (1 + mu + sigma * epsilon)
-#   return(price)
-# }
-# 
-# discreteStochastic <- function(days, price, mu, sigma) {
-#   return <- c()
-#   prices <- c(price)
-#   for (i in seq(days-1)){
-#     prices <- c(prices, calcPrice(price,mu,sigma))
-#     return <- calcReturn(prices)
-#     if (length(return) > 1) {
-#       #mu <- median(return)
-#       #sigma <- sd(return)
-#     }
-#   }
-#   return(prices)
-# }
-
 discreteStochastic <- function(days, price, mu, sigma) {
   prices <- c(price)
   for (i in 2:(days)) {
     epsilon <- runif(n=1, min=-1, max=1)
-    price = price + price*(mu + sigma * epsilon)
+    price = price*(1 + mu + sigma * epsilon)
     prices <- c(prices, price)
+    
+    # uncomment the block to calculate new sigma
+    # return <- calcReturns(c(data_until_sim, prices))
+    # if (length(return) > 1) {
+    #   #mu <- median(return)
+    #   sigma <- sd(return)
+    # }
   }
   return(prices)
 }
 
-continuousStochastic <- function(price, mu, sigma, epsilon, days){
+continuousStochastic <- function(price, mu, sigma, epsilon, days, period=365){
   prices <- c()
   for (t in 0:(days-1)){
-    p <- price * exp((mu-sigma^2/2)*t+sigma*epsilon*sqrt(t))
+    
+    # uncomment the block to calculate the factor period/days
+    # eg. 365/250*t
+    #t <- t * (period / days)
+    p <- price * exp((mu-(sigma^2)/2)*t+sigma*epsilon*sqrt(t))
     prices <- c(prices,  p)
   }
   return(prices)

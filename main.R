@@ -18,8 +18,8 @@ source("calc.R")
 # lines(trucks, type="o", pch=22, lty=2, col="red")
 
 #allData <- loadData('GOOGL')
-allData <- loadData('KO')
-#allData <- loadData('AAPL')
+#allData <- loadData('KO')
+allData <- loadData('AAPL')
 
 # reverse order
 allData <- allData[nrow(allData):1,]
@@ -35,26 +35,28 @@ data <-dataIntervall
 # Configuration: 
 # --------------------------------------
 # Number of simulation days and siumulations
-sim_days  <- 250
 sim_count <- 3
+sim_days <- 250
 
 # Effective stock prices for the whole period
-prices    <- data$close
+prices    <- data$open
 # number of days in the defined interval, also includes the sumulation dayss
 days      <- length(prices)
 # The price on the simulation start day
 price     <- prices[[days-sim_days]]
 
 # Calculation of the data from the begin of the period until to the start of the simulation
-return      <- calcReturns(dataIntervall[sim_days:nrow(dataIntervall)-sim_days,,drop=F]$close)
-mu          <- mean(return)
-sigma       <- sd(return)
+data_until_sim  <- dataIntervall[sim_days:nrow(dataIntervall)-sim_days,,drop=F]$open
+return          <- calcReturns(data_until_sim)
+mu              <- mean(return)
+sigma           <- sd(return)
 
 
 # #############################################################
 # ##                       Simulations                       ##
 # #############################################################
 
+set.seed(46)
 
 # Execute Simulations
 sim_list <- list()
