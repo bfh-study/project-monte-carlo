@@ -26,7 +26,7 @@ plotSimulations <- function(data, simulations, days, sim_days) {
   d <- data.frame(X=c(seq(days-sim_days,days-1)))
   
   # get the range for the x and y axis
-  xrange <- range(seq(0,days))
+  xrange <- range(seq(1,days))
   yrange <- range(data)
   plot(xrange, yrange, type="n", xlab="Tage",ylab="Preis" ) 
   lines(data, type = "l", col = 1) # Color 1 = black
@@ -37,4 +37,5 @@ plotSimulations <- function(data, simulations, days, sim_days) {
     color = color + 1
   }
 }
+
 

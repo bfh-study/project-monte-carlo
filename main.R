@@ -8,13 +8,6 @@
 source("util.R")
 source("calc.R")
 
-#allData <- loadData('GOOGL')
-allData <- loadData('KO')
-#allData <- loadData('AAPL')
-
-# reverse order
-allData <- allData[nrow(allData):1,]
-
 # example of how you can create a line chart
 # data2017 <- subset(allData, as.Date(timestamp) > as.Date('2016-12-31') & as.Date(timestamp) < as.Date('2018-01-01'))
 # # convert column 'timestamp'
@@ -24,34 +17,61 @@ allData <- allData[nrow(allData):1,]
 # plot(data2017$timestamp, data2017$close, type='l', ylim = yrange)
 # lines(trucks, type="o", pch=22, lty=2, col="red")
 
-dataIntervall <- subset(allData, as.Date(timestamp) > as.Date('2017-09-30') & as.Date(timestamp) < as.Date('2018-01-01'))
+#allData <- loadData('GOOGL')
+allData <- loadData('KO')
+#allData <- loadData('AAPL')
+
+# reverse order
+allData <- allData[nrow(allData):1,]
+
+# required data intervall
+dataIntervall <- subset(allData, as.Date(timestamp) > as.Date('2015-12-31') & as.Date(timestamp) < as.Date('2018-01-01'))
 
 # Data assignment
 data <-dataIntervall
 #data <-allData
 
-# Number of simulation days
-sim_days  <- 25
+# --------------------------------------
+# Configuration: 
+# --------------------------------------
+# Number of simulation days and siumulations
+sim_days  <- 250
 sim_count <- 3
 
-# Data until simulation date. 
-# It is used for calculating: return, sample mean and sample standard deviation 
-calcData  <- dataIntervall[sim_days:nrow(dataIntervall)-sim_days,,drop=F]
-rendite   <- calcRentide(calcData$close)
-mean      <- mean(rendite)
-sd        <- sd(rendite)
-
-# number of days in the defined interval, also includes the sumulation days
-days      <- length(data$X)
-
+# Effective stock prices for the whole period
+prices    <- data$close
+# number of days in the defined interval, also includes the sumulation dayss
+days      <- length(prices)
 # The price on the simulation start day
-price     <- data$close[[days-sim_days]]
+price     <- prices[[days-sim_days]]
+
+# Calculation of the data from the begin of the period until to the start of the simulation
+return      <- calcReturns(dataIntervall[sim_days:nrow(dataIntervall)-sim_days,,drop=F]$close)
+mu          <- mean(return)
+sigma       <- sd(return)
+
+
+# #############################################################
+# ##                       Simulations                       ##
+# #############################################################
+
 
 # Execute Simulations
 sim_list <- list()
-for (i in seq(0:sim_count)){
-  sim_list[[i]] <-simulation(sim_days, price, mean, sd)
+sim_list[[1]]  <- continuousStochastic(price, mu, sigma,  1, sim_days)
+sim_list[[2]]  <- continuousStochastic(price, mu, sigma,  0, sim_days)
+sim_list[[3]]  <- continuousStochastic(price, mu, sigma, -1, sim_days)
+
+l <- length(sim_list)
+for (i in 1:sim_count){
+  sim_list[[i+l]] <-discreteStochastic(sim_days, price, mu, sigma)
 }
 
 # Plot simulations
-plotSimulations(calcPrices, sim_list, days, sim_days)
+plotSimulations(prices, sim_list, days, sim_days)
+
+
+
+
+
+

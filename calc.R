@@ -1,45 +1,48 @@
-calcRentide <- function(data, pre) {
-  rendite <- c()
+
+calcReturns <- function(data) {
+  return <- c()
   for (x in 2:length(data)-1) {
     a <- (data[x] - data[x-1])/data[x-1]
-    rendite <- c(rendite, a)
+    return <- c(return, a)
   }
-  return(rendite)
+  return(return)
 }
 
-f_stock_return <- function(stock_price, stock_mu, stock_sigma){
-  #set.seed(42) # for reproducibility
-  delta_t <- 1/1 # one period
-  for (i in seq(1)){
-    epsilon <- runif(n=1, min=0, max=1) # random generated number
-    # calculate stock price (using quantile function of normal distribution)
-    stock_price <- stock_price * (1 + qnorm(epsilon,
-                                            stock_mu * delta_t,
-                                            stock_sigma* sqrt(delta_t)))
+# calcPrice <- function(price, mu, sigma){
+#   epsilon <- runif(n=1, min=-1, max=1)
+#   price <- price * (1 + mu + sigma * epsilon)
+#   return(price)
+# }
+# 
+# discreteStochastic <- function(days, price, mu, sigma) {
+#   return <- c()
+#   prices <- c(price)
+#   for (i in seq(days-1)){
+#     prices <- c(prices, calcPrice(price,mu,sigma))
+#     return <- calcReturn(prices)
+#     if (length(return) > 1) {
+#       #mu <- median(return)
+#       #sigma <- sd(return)
+#     }
+#   }
+#   return(prices)
+# }
+
+discreteStochastic <- function(days, price, mu, sigma) {
+  prices <- c(price)
+  for (i in 2:(days)) {
+    epsilon <- runif(n=1, min=-1, max=1)
+    price = price + price*(mu + sigma * epsilon)
+    prices <- c(prices, price)
   }
-  return(stock_price)
+  return(prices)
 }
 
-f_stock_return <- function(price, stock_mu, stock_sigma){
-  #set.seed(10000000) # for reproducibility
-  epsilon <- runif(n=1, min=-1, max=1) # random generated number
-  # calculate stock price (using quantile function of normal distribution)
-  stock_price <- price * (1 + stock_mu + stock_sigma * epsilon)
-  return(stock_price)
-}
-
-simulation <- function(simulations, stock_price, stock_mu, stock_sigma) {
-  stock_prices <- c()
-  rendite <- c()
-  stock_prices <- c(stock_price)
-  for (i in seq(simulations-1)){
-    stock_prices <- c(stock_prices, f_stock_return(stock_price,stock_mu,stock_sigma))
-    rendite <- calcRentide(stock_prices)
-    if (length(rendite) > 1) {
-      #stock_mu <- mean(rendite)
-      stock_sigma <- sd(rendite)
-    }
+continuousStochastic <- function(price, mu, sigma, epsilon, days){
+  prices <- c()
+  for (t in 0:(days-1)){
+    p <- price * exp((mu-sigma^2/2)*t+sigma*epsilon*sqrt(t))
+    prices <- c(prices,  p)
   }
-  return(stock_prices)
+  return(prices)
 }
-
