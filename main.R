@@ -1,4 +1,10 @@
 
+
+# TODO: markdown integration für Prüfung
+
+
+
+
 # #############################################################
 # ##                       MAIN-FILE                         ##
 # #############################################################
@@ -35,8 +41,11 @@ data <-dataIntervall
 # Configuration: 
 # --------------------------------------
 # Number of simulation days and siumulations
-sim_count <- 3
+sim_count <- 100
 sim_days <- 250
+sd_max = 2
+sd_min = -2
+
 
 # Effective stock prices for the whole period
 prices    <- data$open
@@ -56,21 +65,22 @@ sigma           <- sd(return)
 # ##                       Simulations                       ##
 # #############################################################
 
-set.seed(46)
+#set.seed(377)
 
 # Execute Simulations
-sim_list <- list()
-sim_list[[1]]  <- continuousStochastic(price, mu, sigma,  1, sim_days)
-sim_list[[2]]  <- continuousStochastic(price, mu, sigma,  0, sim_days)
-sim_list[[3]]  <- continuousStochastic(price, mu, sigma, -1, sim_days)
 
-l <- length(sim_list)
+continuous <- list()
+continuous[[1]]  <- continuousStochastic(price, mu, sigma, sd_max, sim_days)
+continuous[[2]]  <- continuousStochastic(price, mu, sigma, 0, sim_days)
+continuous[[3]]  <- continuousStochastic(price, mu, sigma, sd_min, sim_days)
+
+discrete <- list()
 for (i in 1:sim_count){
-  sim_list[[i+l]] <-discreteStochastic(sim_days, price, mu, sigma)
+  discrete[[i]] <-discreteStochastic(sim_days, price, mu, sigma)
 }
 
 # Plot simulations
-plotSimulations(prices, sim_list, days, sim_days)
+plotSimulations(prices, continuous, discrete, days, sim_days)
 
 
 

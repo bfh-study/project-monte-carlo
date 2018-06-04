@@ -21,7 +21,7 @@ loadData <- function(symbol, path = './data') {
     return(loadData)
 }
 
-plotSimulations <- function(data, simulations, days, sim_days) {
+plotSimulations <- function(data, continuous, discrete, days, sim_days) {
   # Create Line Chart
   d <- data.frame(X=c(seq(days-sim_days,days-1)))
   
@@ -29,12 +29,16 @@ plotSimulations <- function(data, simulations, days, sim_days) {
   xrange <- range(seq(1,days))
   yrange <- range(data)
   plot(xrange, yrange, type="n", xlab="Tage",ylab="Preis" ) 
-  lines(data, type = "l", col = 1) # Color 1 = black
+  lines(data, type = "l", col = 1, lwd=2) # Color 1 = black
   
-  color = 2
-  for (prices in simulations) {
+  color = 5
+  for (prices in discrete) {
     lines(y=prices, x=d$X, type = "l", col = color)
     color = color + 1
+  }
+  
+  for (prices in continuous) {
+    lines(y=prices, x=d$X, type = "l", col = "blue",  lwd=2)
   }
 }
 
