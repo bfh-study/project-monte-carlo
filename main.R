@@ -83,6 +83,32 @@ for (i in 1:sim_count){
 plotSimulations(prices, continuous, discrete, days, sim_days)
 
 
+blackscholes <- function(S, X, r, t, sigma) {
+  values <- c()
+  
+  d1 <- (log(S/X) + (r*t + (sigma^2 * t)/2)) / (sigma * sqrt(t))
+  d2 <- (log(S/X) + (r*t - (sigma^2 * t)/2)) / (sigma * sqrt(t))
+  
+  values[1] <- S * pnorm(d1) - X*exp(-r*t) * pnorm(d2)
+  values[2] <- (-S * pnorm(-d1) + X*exp(-r*t) * pnorm(-d2))
+  
+  return (values)
+}
+strike_price <- continuousStochastic(price, mu, sigma, 0, sim_days)[[sim_days]]
+li <- c()
+for (i in 1:sim_days) {
+  li <- c(li, blackscholes(price,strike_price,0.005,i,sigma)[[1]])
+}
+
+# get the range for the x and y axis
+xrange <- range(seq(1,sim_days))
+yrange <- range(li)
+plot(xrange, yrange, type="n", xlab="Tage",ylab="Preis" ) 
+lines(li, type = "l", col = 1, lwd=2) # Color 1 = black
+
+
+print(results)
+print(blackscholes(110,100,.05,1,.2))
 
 
 
