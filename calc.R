@@ -26,3 +26,21 @@ continuousStochastic <- function(price, mu, sigma, epsilon, days, period=365){
   }
   return(prices)
 }
+
+# Black-Scholes Option Value
+# S = Spot price
+# X = Strike price
+# r = Riskfree Interest Rate
+# t = Time to Maturity
+# sigma = Volatility
+blackscholes <- function(S, X, r, t, sigma) {
+  values <- c()
+  
+  d1 <- (log(S/X) + (r*t + (sigma^2 * t)/2)) / (sigma * sqrt(t))
+  d2 <- (log(S/X) + (r*t - (sigma^2 * t)/2)) / (sigma * sqrt(t))
+  
+  values[1] <- S * pnorm(d1) - X*exp(-r*t) * pnorm(d2)
+  values[2] <- (-S * pnorm(-d1) + X*exp(-r*t) * pnorm(-d2))
+  
+  return (values)
+}
