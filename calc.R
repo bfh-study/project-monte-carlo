@@ -11,7 +11,7 @@ calcReturns <- function(data) {
 discreteStochastic <- function(days, price, mu, sigma) {
   prices <- c(price)
   for (i in 2:(days)) {
-    epsilon <- runif(n=1, min=-1.5, max=1.5)
+    epsilon <- runif(n=1, min=-1, max=1)
     price = price*(1 + mu + sigma * epsilon)
     prices <- c(prices, price)
   }
@@ -25,6 +25,22 @@ continuousStochastic <- function(price, mu, sigma, epsilon, days, period=365){
     prices <- c(prices,  p)
   }
   return(prices)
+}
+
+outrange <- function(discrete) {
+  out <- 0
+  for (dx in discrete) {
+    c1 <- continuous[[1]]
+    c2 <- continuous[[3]]
+    for (z in seq(length(c1))) {
+      if (dx[z] > c1[z] || dx[z] < c2[z]) {
+        out = out + 1
+        break
+      }
+    }
+  }
+  x <- 100/sim_count * out
+  return(x)
 }
 
 # Black-Scholes Option Value
