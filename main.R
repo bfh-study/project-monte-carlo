@@ -24,8 +24,8 @@ source("calc.R")
 # lines(trucks, type="o", pch=22, lty=2, col="red")
 
 #allData <- loadData('GOOGL')
-allData <- loadData('KO')
-#allData <- loadData('AAPL')
+#allData <- loadData('KO')
+allData <- loadData('AAPL')
 
 # reverse order
 allData <- allData[nrow(allData):1,]
@@ -38,8 +38,16 @@ data <-dataIntervall
 #data <-allData
 
 
-
-
+discreteStochastic <- function(days, price, mu, sigma) {
+  prices <- c(price)
+  for (i in 2:(days)) {
+    epsilon <- runif(n=1, min=-1, max=1)
+    a <- rnorm(1)
+    price <- price*(1 + mu + sigma * a)
+    prices <- c(prices, price)
+  }
+  return(prices)
+}
 
 # --------------------------------------
 # Configuration: 
@@ -47,8 +55,7 @@ data <-dataIntervall
 # Number of simulation days and siumulations
 sim_count <- 1000
 sim_days <- 250
-sim_sd = 1.3 #  1=70%
-
+sim_epsilon = 2.5 #  1=70%
 
 # Effective stock prices for the whole period
 prices    <- data$open
@@ -59,83 +66,88 @@ price     <- prices[[days-sim_days]]
 
 # Calculation of the data from the begin of the period until to the start of the simulation
 data_until_sim  <- dataIntervall[sim_days:nrow(dataIntervall)-sim_days,,drop=F]$open
-return          <- calcReturns(data_until_sim)
+v          <- calcReturns(data_until_sim)
 mu              <- mean(return)
 sigma           <- sd(return)
+
 
 
 # #############################################################
 # ##                       Simulations                       ##
 # #############################################################
 
-#set.seed(133)
+set.seed(3)
 
 # Execute Simulations
 
 continuous <- list()
-continuous[[1]]  <- continuousStochastic(price, mu, sigma, sim_sd, sim_days)
+continuous[[1]]  <- continuousStochastic(price, mu, sigma, sim_epsilon, sim_days)
 continuous[[2]]  <- continuousStochastic(price, mu, sigma, 0, sim_days)
-continuous[[3]]  <- continuousStochastic(price, mu, sigma, -sim_sd, sim_days)
+continuous[[3]]  <- continuousStochastic(price, mu, sigma, -sim_epsilon, sim_days)
 
 discrete <- list()
 for (i in 1:sim_count){
   discrete[[i]] <-discreteStochastic(sim_days, price, mu, sigma)
 }
 
-# Plot simulations
+# # # Plot simulations
 plotSimulations(prices, continuous, discrete, days, sim_days, outrange)
 
+# --------------------------------------
+# Log-Normalverteilung: 
+# --------------------------------------
+S <- matrix(unlist(discrete), byrow=TRUE, nrow=length(discrete))
 
-lnMean = price*exp(mu*days)
-lnSD = price*exp(mu*days)*sqrt(exp((sigma^2)*days)-1)
+lnMean = price*exp(mu*sim_days)
+lnSD = price*exp(mu*sim_days)*sqrt(exp((sigma^2)*sim_days)-1)
 
 meanOfLog = log(price) + (mu-(sigma^2)/2)*sim_days
 sdOfLog = sigma*sqrt(sim_days)
+#priceGrid = seq(0,mu+10*lnSD,length=1000)
+
 priceGrid = seq(0,mu+10*lnSD,length=1000)
 theoreticalDens = dlnorm(priceGrid,meanOfLog, sdOfLog)
 
-#xrange <- range(priceGrid)
-#yrange <- range(theoreticalDens)
-S = matrix(0,nrow=sim_days-1,ncol=sim_count-1)
 
-S <- matrix(unlist(discrete), byrow=TRUE, nrow=length(discrete) )
-empiricalDens = density(S)#S[sim_days,])
-plot(priceGrid,theoreticalDens,type='l',xlab='Prices',ylab='Density')
+empiricalDens = density(S[,sim_days])#S[sim_days,])
+
+yrange = seq(0, 0.015, length=1000)
+plot(priceGrid,yrange ,type='n',xlab='Preise',ylab='Dichte')
+
+#plot(xrange,yrange,type='n',xlab='Preise',ylab='Dichte')
+lines(priceGrid, theoreticalDens,col='black')
 lines(empiricalDens,col='blue')
 
 
 
+# --------------------------------------
+# Log-Normalverteilung Histogram: 
+# --------------------------------------
+h <- hist(S[,sim_days], breaks = 10, , xlab="Preis",ylab="Dichte", col="green", main="Histogram der Log-Normalverteilten Preise")
+
+xfit <- seq(min(S[,sim_days]), max(S[,sim_days]))
+yfit <- dlnorm(xfit, meanlog=meanOfLog, sdlog=sdOfLog) #dlnorm(xfit, mean=mean(S[,sim_days]), sd=sd(S[,sim_days]))
+A <- data.frame(yfit)
+yfit <- yfit*diff(h$mids[1:2])*length(S[,sim_days])
+
+lines(xfit, yfit,col='black')
 
 
 
 
-blackscholes <- function(S, X, r, t, sigma) {
-  values <- c()
-  
-  d1 <- (log(S/X) + (r*t + (sigma^2 * t)/2)) / (sigma * sqrt(t))
-  d2 <- (log(S/X) + (r*t - (sigma^2 * t)/2)) / (sigma * sqrt(t))
-  
-  values[1] <- S * pnorm(d1) - X*exp(-r*t) * pnorm(d2)
-  values[2] <- (-S * pnorm(-d1) + X*exp(-r*t) * pnorm(-d2))
-  
-  return (values)
-}
-strike_price <- continuousStochastic(price, mu, sigma, 0, sim_days)[[sim_days]]
-li <- c()
-for (i in 1:sim_days) {
-  li <- c(li, blackscholes(price,strike_price,0.005,i,sigma)[[1]])
-}
+# --------------------------------------
+# Black Sholes Model: 
+# --------------------------------------
+bs_lines <- blackscholes_sim(price, mu, sigma, sim_days)
 
 # get the range for the x and y axis
 xrange <- range(seq(1,sim_days))
-yrange <- range(li)
-plot(xrange, yrange, type="n", xlab="Tage",ylab="Preis" ) 
-lines(li, type = "l", col = 1, lwd=2) # Color 1 = black
+yrange <- range(c(li1,li2))
+plot(xrange, yrange, type="n", xlab="Tage",ylab="Preis" )
+lines(bs_lines[[1]], type = "l", col = "black", lwd=2) # Color 1 = black
+lines(bs_lines[[2]], type = "l", col = "red", lwd=2) # Color 1 = black
 
-
-print(results)
 print(blackscholes(110,100,.05,1,.2))
-
 
 
 

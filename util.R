@@ -27,8 +27,8 @@ plotSimulations <- function(data, continuous, discrete, days, sim_days, outrange
   d <- data.frame(X=c(seq(days-sim_days,days-1)))
   
   # get the range for the x and y axis
-  xrange <- range(seq(1,days))
-  yrange <- range(data)
+  xrange <- range(seq(1, days))
+  yrange <- range(c(range(data)-80, data, range(data)+80))
   plot(xrange, yrange, type="n", xlab="Tage",ylab="Preis" ) 
   
   # continuous lines
@@ -44,14 +44,13 @@ plotSimulations <- function(data, continuous, discrete, days, sim_days, outrange
   }
   
   # effective line
-  
   lines(data, type = "l", col = 1, lwd=2) # Color 1 = black
   
   out <- outrange(discrete)
   b <- format(mu, digits=3)
   c <- format(sigma, digits=3)
   
-  mtext(paste(out, "% lines out,", "sd(blue)=", sim_sd, ",mu", b,",sigma", c , sep=" "))
+  mtext(paste("sim=",sim_count, ",",  out, "% lines out,", "epsilon(blue)=", sim_epsilon, ",mu", b,",sigma", c , sep=" "))
   
 }
 

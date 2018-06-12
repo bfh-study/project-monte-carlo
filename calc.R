@@ -1,24 +1,16 @@
 
 calcReturns <- function(data) {
   return <- c()
-  for (x in 2:length(data)-1) {
+  for (x in 2:length(data)) {
     a <- (data[x] - data[x-1])/data[x-1]
     return <- c(return, a)
   }
   return(return)
 }
 
-discreteStochastic <- function(days, price, mu, sigma) {
-  prices <- c(price)
-  for (i in 2:(days)) {
-    epsilon <- runif(n=1, min=-1, max=1)
-    price = price*(1 + mu + sigma * epsilon)
-    prices <- c(prices, price)
-  }
-  return(prices)
-}
 
-continuousStochastic <- function(price, mu, sigma, epsilon, days, period=365){
+
+continuousStochastic <- function(price, mu, sigma, epsilon, days, period=250){
   prices <- c()
   for (t in 0:(days-1)) {
     p <- price * exp((mu-(sigma^2)/2)*t+sigma*epsilon*sqrt(t))
@@ -60,3 +52,35 @@ blackscholes <- function(S, X, r, t, sigma) {
   
   return (values)
 }
+
+
+
+blackscholes <- function(S, X, r, t, sigma) {
+  values <- c()
+  
+  d1 <- (log(S/X) + (r*t + (sigma^2 * t)/2)) / (sigma * sqrt(t))
+  d2 <- (log(S/X) + (r*t - (sigma^2 * t)/2)) / (sigma * sqrt(t))
+  
+  values[1] <- S * pnorm(d1) - X*exp(-r*t) * pnorm(d2)
+  values[2] <- (-S * pnorm(-d1) + X*exp(-r*t) * pnorm(-d2))
+  
+  return (values)
+}
+
+blackscholes_sim <- function(price, mu, sigma, sim_days) {
+  strike_price <- continuousStochastic(price, mu, sigma, 0, sim_days)[[sim_days]]
+  li1 <- c()
+  li2 <- c()
+  for (i in 1:sim_days) {
+    li1 <- c(li1, blackscholes(price,strike_price,0.005,i,sigma)[[1]])
+    li2 <- c(li2, blackscholes(price,strike_price,0.005,i,sigma)[[2]])
+  }
+  
+  return(list(li1, li2))
+}
+
+
+
+
+
+
